@@ -1,0 +1,51 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - img "Logo" [ref=e5]
+      - navigation [ref=e6]:
+        - list [ref=e7]:
+          - listitem [ref=e8]:
+            - link "Сегодня" [ref=e9] [cursor=pointer]:
+              - /url: /
+              - img [ref=e10]
+              - generic [ref=e12]: Сегодня
+          - listitem [ref=e13]:
+            - link "Календарь" [ref=e14] [cursor=pointer]:
+              - /url: /calendar
+              - img [ref=e15]
+              - generic [ref=e17]: Календарь
+          - listitem [ref=e18]:
+            - link "Задачи" [ref=e19] [cursor=pointer]:
+              - /url: /tasks
+              - img [ref=e20]
+              - generic [ref=e23]: Задачи
+          - listitem [ref=e24]:
+            - link "Пара" [ref=e25] [cursor=pointer]:
+              - /url: /pair
+              - img [ref=e26]
+              - generic [ref=e31]: Пара
+          - listitem [ref=e32]:
+            - link "Профиль" [ref=e33] [cursor=pointer]:
+              - /url: /profile
+              - img [ref=e34]
+              - generic [ref=e39]: Профиль
+    - main [ref=e41]:
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - button "Вход" [ref=e44]
+          - button "Регистрация" [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: Email
+            - textbox [ref=e49]
+          - generic [ref=e50]:
+            - generic [ref=e51]: Пароль
+            - textbox [ref=e52]
+          - button "Войти" [ref=e54]
+  - button "Open Next.js Dev Tools" [ref=e60] [cursor=pointer]:
+    - img [ref=e61]
+  - alert [ref=e64]
+```

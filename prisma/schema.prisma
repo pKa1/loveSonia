@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  name         String
+  email        String       @unique
+  timezone     String       @default("UTC")
+  passwordHash String?
+  pairMemberships Membership[]
+  tasksCreated Task[]
+  comments     Comment[]
+  pushSubscriptions PushSubscription[]
+  reminders    TaskReminder[]
+}
+
+model Pair {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  code         String       @unique
+  weColorHex   String       @default("#ff8f70")
+  memberships  Membership[]
+  tasks        Task[]
+  events       Event[]
+  quietHours   QuietHours?
+  categories   EventCategory[]
+  recurring    RecurringWeekly[]
+}
+
+model Membership {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  pair         Pair     @relation(fields: [pairId], references: [id])
+  pairId       String
+  role         String   // "self" or "partner"; for couples, two rows per pair
+  colorHex     String   // personal accent color
+  @@unique([userId, pairId])
+}
+
+enum TaskAssignee {
+  SELF
+  PARTNER
+  WE
+}
+
+model Task {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  title        String
+  pair         Pair         @relation(fields: [pairId], references: [id])
+  pairId       String
+  createdBy    User         @relation(fields: [createdById], references: [id])
+  createdById  String
+  assignee     TaskAssignee
+  dueAt        DateTime?
+  completedAt  DateTime?
+  comments     Comment[]
+  reminders    TaskReminder[]
+}
+
+model Event {
+  id           String       @id @default(cuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  title        String
+  pair         Pair         @relation(fields: [pairId], references: [id])
+  pairId       String
+  startAt      DateTime
+  endAt        DateTime
+  location     String?
+  allDay       Boolean      @default(false)
+  assignee     TaskAssignee @default(WE)
+  category     EventCategory? @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+}
+
+model EventCategory {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pair      Pair     @relation(fields: [pairId], references: [id])
+  pairId    String
+  name      String
+  color     String   // CSS color like #RRGGBB
+
+  events    Event[]
+  recurring RecurringWeekly[]
+
+  @@index([pairId])
+  @@unique([pairId, name])
+}
+
+model Comment {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  content      String
+  author       User      @relation(fields: [authorId], references: [id])
+  authorId     String
+  task         Task?     @relation(fields: [taskId], references: [id])
+  taskId       String?
+}
+
+model QuietHours {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  pair         Pair     @relation(fields: [pairId], references: [id])
+  pairId       String   @unique
+  startMinute  Int      // 0..1439
+  endMinute    Int      // 0..1439, can be less than start -> overnight
+}
+
+// Weekly recurring schedule items for a pair
+model RecurringWeekly {
+  id          String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  pair        Pair         @relation(fields: [pairId], references: [id])
+  pairId      String
+  title       String
+  weekday     Int          // 0..6, Monday=1, Sunday=0 (JS getDay)
+  startMinute Int          // 0..1439 in pair/user TZ
+  endMinute   Int          // 0..1439
+  location    String?
+  assignee    TaskAssignee @default(WE)
+  category    EventCategory? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  fromDate    DateTime?    // inclusive boundary in local TZ (date part used)
+  toDate      DateTime?    // inclusive boundary in local TZ
+
+  @@index([pairId, weekday])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+}
+
+model TaskReminder {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  task        Task     @relation(fields: [taskId], references: [id])
+  taskId      String
+  remindAt    DateTime
+  deliveredAt DateTime?
+  payload     String?
+}

@@ -1,0 +1,12 @@
+{
+  "name": "ЛюблюСоню",
+  "short_name": "ЛюблюСоню",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#9b87f5",
+  "icons": [
+    { "src": "/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
+
