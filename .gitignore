@@ -45,3 +45,7 @@ next-env.d.ts
 # SQLite dev DB files
 **/dev.db
 **/dev.db*
+
+# SQLite dev DB files
+**/dev.db
+**/dev.db*
