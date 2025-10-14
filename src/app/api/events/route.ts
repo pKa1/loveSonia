@@ -44,8 +44,15 @@ export async function GET(req: Request) {
   const timeZone = me?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   let startLocal = new Date();
   let endLocal = new Date();
-  if (startParam) startLocal = new Date(startParam);
-  if (endParam) endLocal = new Date(endParam);
+  // Interpret provided params as dates in user's time zone, not server TZ
+  function toLocalDateOnlyInTz(param: string): Date {
+    const instant = new Date(param);
+    if (isNaN(instant.getTime())) return new Date();
+    const tzView = new Date(instant.toLocaleString("en-US", { timeZone }));
+    return new Date(tzView.getFullYear(), tzView.getMonth(), tzView.getDate());
+  }
+  if (startParam) startLocal = toLocalDateOnlyInTz(startParam);
+  if (endParam) endLocal = toLocalDateOnlyInTz(endParam);
   if (!startParam && !endParam) {
     // today only
     const nowTz = new Date(new Date().toLocaleString("en-US", { timeZone }));
