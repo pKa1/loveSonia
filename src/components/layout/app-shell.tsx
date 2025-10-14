@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/nav/sidebar";
 import { BottomNav } from "@/components/nav/bottom-nav";
@@ -11,6 +11,25 @@ type AppShellProps = { children: ReactNode };
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const hideChrome = pathname === "/welcome";
+  // Persist client timezone once to ensure correct calendar ranges on server
+  useEffect(() => {
+    (async () => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (!tz) return;
+        const r = await fetch("/api/profile");
+        const d = await r.json().catch(() => ({}));
+        const current = d?.user?.timezone;
+        if (current !== tz) {
+          await fetch("/api/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timezone: tz }),
+          });
+        }
+      } catch {}
+    })();
+  }, []);
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
       {!hideChrome && <Sidebar />}
