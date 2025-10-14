@@ -43,7 +43,7 @@ bot.callbackQuery("help", async (ctx) => {
     "4) Чтобы вернуться в приложение — снова нажмите кнопку.",
   ].join("\n");
   await ctx.answerCallbackQuery();
-  await ctx.reply(text, { reply_markup: mainMenu(), disable_web_page_preview: true });
+  await ctx.reply(text, { reply_markup: mainMenu(), link_preview_options: { is_disabled: true } });
 });
 
 bot.catch((err) => {
