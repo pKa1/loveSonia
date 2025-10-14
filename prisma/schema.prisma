@@ -19,6 +19,8 @@ model User {
   email        String       @unique
   timezone     String       @default("UTC")
   passwordHash String?
+  telegramId   String?      @unique
+  telegramUsername String?
   pairMemberships Membership[]
   tasksCreated Task[]
   comments     Comment[]
