@@ -634,11 +634,12 @@ function WeekView({ events, anchor, myRole, onOpen }: { events: Event[]; anchor:
                   const color = e.category?.color || colorOf(myRole, e.assignee);
                   const widthPct = cols > 0 ? (100 / cols) : 100;
                   const leftPct = cols > 0 ? (col * widthPct) : 0;
-                  const compact = widthPct < 60;
+                  const small = isSmallEvent(start, end);
+                  const compact = widthPct < 60 || small;
                   return (
                     <div key={e.id} className="absolute rounded-md border p-1 text-[11px] shadow-sm overflow-hidden cursor-pointer" onClick={() => onOpen(e)} title={`${fmtRange(start, end)} • ${e.title}${e.location ? ` • ${e.location}` : ''}`} style={{ top: `${topPct}%`, height: `${heightPct}%`, backgroundColor: withOpacity(color), left: `${leftPct}%`, width: `${widthPct}%` }}>
-                      <div className="flex items-center justify-between gap-1">
-                        <div className={`font-medium ${compact ? 'truncate' : ''}`}>{e.title}</div>
+                      <div className="flex items-center justify-between gap-1 min-w-0">
+                        <div className="font-medium flex-1 min-w-0 truncate">{e.title}</div>
                         <div className="text-[10px] font-mono text-muted-foreground shrink-0">{fmtTime(start)}</div>
                       </div>
                       {!compact && e.category?.name && <div className="text-[10px] text-muted-foreground truncate">{e.category.name}</div>}
@@ -657,11 +658,12 @@ function WeekView({ events, anchor, myRole, onOpen }: { events: Event[]; anchor:
                   const color = e.category?.color || colorOf(myRole, e.assignee);
                   const widthPct = cols > 0 ? (100 / cols) : 100;
                   const leftPct = cols > 0 ? (col * widthPct) : 0;
-                  const compact = widthPct < 60;
+                  const small = isSmallEvent(start, end);
+                  const compact = widthPct < 60 || small;
                   return (
                     <div key={e.id} className="absolute rounded-md border p-1 text-[11px] shadow-sm overflow-hidden cursor-pointer" onClick={() => onOpen(e)} title={`${fmtRange(start, end)} • ${e.title}${e.location ? ` • ${e.location}` : ''}`} style={{ top: `${topPct}%`, height: `${heightPct}%`, backgroundColor: withOpacity(color), left: `${leftPct}%`, width: `${widthPct}%` }}>
-                      <div className="flex items-center justify-between gap-1">
-                        <div className={`font-medium ${compact ? 'truncate' : ''}`}>{e.title}</div>
+                      <div className="flex items-center justify-between gap-1 min-w-0">
+                        <div className="font-medium flex-1 min-w-0 truncate">{e.title}</div>
                         <div className="text-[10px] font-mono text-muted-foreground shrink-0">{fmtTime(start)}</div>
                       </div>
                       {!compact && e.category?.name && <div className="text-[10px] text-muted-foreground truncate">{e.category.name}</div>}
@@ -679,11 +681,12 @@ function WeekView({ events, anchor, myRole, onOpen }: { events: Event[]; anchor:
                 if (!clipped) return null;
                 const { topPct, heightPct } = clipped;
                 const color = e.category?.color || colorOf(myRole, "WE");
+                const small = isSmallEvent(start, end);
               return (
-                <div key={e.id} className="absolute left-0 right-0 rounded-md border p-2 text-[11px] shadow-sm cursor-pointer pointer-events-auto" onClick={() => onOpen(e)} style={{ top: `${topPct}%`, height: `${heightPct}%`, backgroundColor: withOpacity(color) }}>
-                  <div className="font-medium">{e.title}</div>
-                  {e.category?.name && <div className="text-[10px] text-muted-foreground truncate">{e.category.name}</div>}
-                  {e.location && <div className="text-[10px] text-muted-foreground">{e.location}</div>}
+                <div key={e.id} className="absolute left-0 right-0 rounded-md border p-2 text-[11px] shadow-sm cursor-pointer pointer-events-auto overflow-hidden" onClick={() => onOpen(e)} style={{ top: `${topPct}%`, height: `${heightPct}%`, backgroundColor: withOpacity(color) }}>
+                  <div className="font-medium truncate">{e.title}</div>
+                  {!small && e.category?.name && <div className="text-[10px] text-muted-foreground truncate">{e.category.name}</div>}
+                  {!small && e.location && <div className="text-[10px] text-muted-foreground truncate">{e.location}</div>}
                 </div>
               );
             })}
@@ -708,7 +711,7 @@ function MonthView({ events, anchor, onOpen }: { events: Event[]; anchor: Date; 
             const dayDate = addDays(start, w * 7 + d);
             const dayEvents = events.filter((e) => sameDay(new Date(e.startAt), dayDate));
             return (
-              <div key={d} className="min-h-24 bg-background p-2 text-xs">
+              <div key={d} className="min-h-24 bg-background p-2 text-xs min-w-0">
                 <div className="mb-1 text-muted-foreground">{dayDate.getDate()}</div>
                 <div className="space-y-1">
                   {dayEvents.map((e) => {
