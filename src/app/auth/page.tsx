@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AuthPage() {
-  const [tab, setTab] = useState<"login" | "register">("login");
+  const [tab, setTab] = useState<"login" | "register" | "telegram">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { setError(null); }, [tab]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,10 +45,12 @@ export default function AuthPage() {
 
   return (
     <div className="mx-auto max-w-sm">
-      <div className="mb-4 flex items-center gap-2 text-2xl font-semibold">
+      <div className="mb-4 grid grid-cols-3 gap-2 text-2xl font-semibold">
         <button type="button" className={`rounded-md border px-3 py-1 text-sm ${tab === "login" ? "bg-accent" : ""}`} onClick={() => setTab("login")}>Вход</button>
         <button type="button" className={`rounded-md border px-3 py-1 text-sm ${tab === "register" ? "bg-accent" : ""}`} onClick={() => setTab("register")}>Регистрация</button>
+        <button type="button" className={`rounded-md border px-3 py-1 text-sm ${tab === "telegram" ? "bg-accent" : ""}`} onClick={() => setTab("telegram")}>Telegram</button>
       </div>
+      {tab !== "telegram" && (
       <form onSubmit={onSubmit} className="space-y-3">
         <div className="grid gap-1">
           {tab === "register" && (
@@ -82,6 +85,15 @@ export default function AuthPage() {
           </button>
         </div>
       </form>
+      )}
+
+      {tab === "telegram" && (
+        <div className="space-y-3 text-sm">
+          <div className="text-muted-foreground">Быстрый вход через Telegram Mini App</div>
+          <a className="inline-block rounded-md border px-3 py-2" href="/tg">Открыть Telegram вход</a>
+          <div className="text-xs text-muted-foreground">Если открывается в браузере — нажмите и откройте внутри Telegram.</div>
+        </div>
+      )}
     </div>
   );
 }
