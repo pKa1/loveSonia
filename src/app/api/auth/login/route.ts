@@ -9,8 +9,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
   const password = (body as { email: string; password: string }).password;
-  const email = String((body as { email: string }).email).trim().toLowerCase();
-  const user = await prisma.user.findUnique({ where: { email } });
+  const emailInput = String((body as { email: string }).email).trim();
+  const email = emailInput.toLowerCase();
+
+  // Primary: normalized exact match
+  let user = await prisma.user.findUnique({ where: { email } });
+  // Fallback for legacy records with mixed-case emails in SQLite (case-sensitive)
+  if (!user) {
+    try {
+      const rows = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT id, passwordHash FROM User WHERE LOWER(email) = LOWER(?) LIMIT 1`,
+        emailInput,
+      );
+      if (rows && rows.length > 0) {
+        user = await prisma.user.findUnique({ where: { id: rows[0].id } }) as any;
+      }
+    } catch {
+      // ignore and continue with null user
+    }
+  }
   if (!user || !user.passwordHash) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }

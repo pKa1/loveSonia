@@ -10,14 +10,13 @@ type TgUser = {
   username?: string;
 };
 
-function getBotToken(): string {
-  const token = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
-  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not set");
+function getBotToken(): string | null {
+  const token = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN || null;
   return token;
 }
 
 // Validate Telegram WebApp initData per official docs
-function validateInitData(initData: string): { ok: boolean; data?: Record<string, string> } {
+function validateInitData(initData: string): { ok: boolean; data?: Record<string, string>; reason?: string } {
   try {
     const url = new URL("https://dummy.local/?" + initData);
     const params = Array.from(url.searchParams.entries())
@@ -25,15 +24,16 @@ function validateInitData(initData: string): { ok: boolean; data?: Record<string
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
     const dataCheckString = params.map(([k, v]) => `${k}=${v}`).join("\n");
     const token = getBotToken();
+    if (!token) return { ok: false, reason: "bot_token_missing" };
     const secretKey = crypto.createHmac("sha256", "WebAppData").update(token).digest();
     const signature = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
-    const hash = url.searchParams.get("hash") || "";
-    if (signature !== hash) return { ok: false };
+    const hash = (url.searchParams.get("hash") || "").toLowerCase();
+    if (signature.toLowerCase() !== hash) return { ok: false, reason: "invalid_signature" };
     const data: Record<string, string> = {};
     for (const [k, v] of params) data[k] = v;
     return { ok: true, data };
   } catch {
-    return { ok: false };
+    return { ok: false, reason: "parse_error" };
   }
 }
 
@@ -43,8 +43,16 @@ export async function POST(req: Request) {
   if (!initData || typeof initData !== "string") {
     return NextResponse.json({ error: "initData required" }, { status: 400 });
   }
-  const { ok, data } = validateInitData(initData);
-  if (!ok || !data) return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+  const { ok, data, reason } = validateInitData(initData);
+  if (!ok || !data) {
+    const map: Record<string, { error: string; status: number }> = {
+      bot_token_missing: { error: "server misconfigured: bot token missing", status: 500 },
+      invalid_signature: { error: "invalid signature", status: 401 },
+      parse_error: { error: "bad initData", status: 400 },
+    };
+    const resp = map[reason || "invalid_signature"] || map["invalid_signature"];
+    return NextResponse.json({ error: resp.error }, { status: resp.status });
+  }
 
   // Optional: reject too old auth_date (e.g., > 24h)
   const authDate = Number(data["auth_date"]) || 0;
