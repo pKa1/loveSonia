@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthPage() {
+function AuthPageInner() {
   const search = useSearchParams();
   const next = useMemo(() => {
     const n = search?.get("next") || "/pair";
@@ -107,6 +107,14 @@ export default function AuthPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-sm p-4 text-sm text-muted-foreground">Загрузка…</div>}>
+      <AuthPageInner />
+    </Suspense>
   );
 }
 

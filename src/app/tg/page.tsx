@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME || ""; // опционально
 
-export default function TgAuthPage() {
+function TgAuthPageInner() {
   const search = useSearchParams();
   const next = useMemo(() => {
     const n = search?.get("next") || "/calendar";
@@ -81,4 +81,10 @@ export default function TgAuthPage() {
   );
 }
 
-
+export default function TgAuthPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-md p-6 text-center text-sm text-muted-foreground">Загрузка…</div>}>
+      <TgAuthPageInner />
+    </Suspense>
+  );
+}
