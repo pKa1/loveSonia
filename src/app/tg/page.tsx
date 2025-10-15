@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME || ""; // опционально
 
 export default function TgAuthPage() {
+  const search = useSearchParams();
+  const next = useMemo(() => {
+    const n = search?.get("next") || "/calendar";
+    return n.startsWith("/") ? n : "/";
+  }, [search]);
   const [status, setStatus] = useState<string>("Инициализация...");
   const [fallback, setFallback] = useState<boolean>(false);
 
@@ -42,7 +48,7 @@ export default function TgAuthPage() {
           return;
         }
         setStatus("Успех. Перехожу...");
-        window.location.href = "/calendar";
+        window.location.href = next;
       } catch {
         setStatus("Сбой авторизации");
         setFallback(true);
@@ -69,7 +75,7 @@ export default function TgAuthPage() {
         </div>
       )}
       <div className="mt-6">
-        <Link className="rounded-md border px-3 py-2 text-sm" href="/auth">К выбору входа</Link>
+        <Link className="rounded-md border px-3 py-2 text-sm" href={`/auth?next=${encodeURIComponent(next)}`}>К выбору входа</Link>
       </div>
     </div>
   );

@@ -8,7 +8,8 @@ export async function POST(req: Request) {
   if (!body || typeof body.email !== "string" || typeof body.password !== "string") {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
-  const { email, password } = body as { email: string; password: string };
+  const password = (body as { email: string; password: string }).password;
+  const email = String((body as { email: string }).email).trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.passwordHash) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });

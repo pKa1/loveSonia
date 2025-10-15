@@ -13,13 +13,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email, password and name are required" }, { status: 400 });
   }
   const { name } = data;
-  const email = data.email;
+  const email = String(data.email).trim().toLowerCase();
   const passwordHash = await bcrypt.hash(data.password, 10);
   try {
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: { name, timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" },
-      create: { email, name, passwordHash, timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" },
+    // Block duplicate registrations explicitly to avoid logging in existing users by mistake
+    const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+    if (existing) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        passwordHash,
+        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      },
       select: { id: true, name: true, email: true },
     });
     await setAuthCookie({ userId: user.id });

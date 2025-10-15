@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
+  const search = useSearchParams();
+  const next = useMemo(() => {
+    const n = search?.get("next") || "/pair";
+    return n.startsWith("/") ? n : "/";
+  }, [search]);
   const [tab, setTab] = useState<"login" | "register" | "telegram">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,18 +32,24 @@ export default function AuthPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password, timezone }),
         });
-        if (!res.ok) throw new Error("Failed");
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || "Не удалось зарегистрироваться");
+        }
       } else {
         const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
-        if (!res.ok) throw new Error("Failed");
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || "Неверный email или пароль");
+        }
       }
-      window.location.href = "/pair";
-    } catch (e) {
-      setError("Ошибка регистрации");
+      window.location.href = next;
+    } catch (e: any) {
+      setError(e?.message || (tab === "register" ? "Ошибка регистрации" : "Ошибка входа"));
     } finally {
       setLoading(false);
     }
@@ -90,7 +102,7 @@ export default function AuthPage() {
       {tab === "telegram" && (
         <div className="space-y-3 text-sm">
           <div className="text-muted-foreground">Быстрый вход через Telegram Mini App</div>
-          <a className="inline-block rounded-md border px-3 py-2" href="/tg">Открыть Telegram вход</a>
+          <a className="inline-block rounded-md border px-3 py-2" href={`/tg?next=${encodeURIComponent(next)}`}>Открыть Telegram вход</a>
           <div className="text-xs text-muted-foreground">Если открывается в браузере — нажмите и откройте внутри Telegram.</div>
         </div>
       )}
